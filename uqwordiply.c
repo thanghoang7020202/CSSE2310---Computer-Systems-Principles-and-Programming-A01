@@ -26,8 +26,6 @@ int main(int argc, char** argv) {
         exit(3);
         return 0;
     }
-    
-    printf("Hello World!");
 
     char** wordLib = filetokenize(fp);
 
@@ -41,41 +39,49 @@ int main(int argc, char** argv) {
     for (int i = 0; i < MAX_WORDS;) {
         char guess[60];
         //recieve input from user
-        scanf("Enter guest %d: %s", &i,guess);
+        scanf("Enter guest %d: %s", &i, guess);
         size_t len = strlen(guess);
         // checking process
-        if (strcmp(guess,EOF) == 0) {
+        if (feof(stdin)) {
                 exit(4);
-                }
+        }
         if (strcmp(guess,starterWord) == 0) {
             printf("Guesses can't be the starter word - try again.\n");
+            continue;
         } 
-        // run though each character in the guess
+        // invalid char check
         for (int j = 0; j < len; j++) {
             if ((guess[j] >= 65 && guess[j] <= 90) || (guess[j] >= 97 && guess[j] <= 122)) {
                 // These number above are ASCII code for A-Z and a-z
                 printf("Guesses must contain only letters - try again.\n");
-            } else if (strstr(guess,starterWord) == NULL) {
+                continue;
+            } 
+        }
+        // starter word check
+        if (strstr(guess,starterWord) == NULL) {
                 printf("Guesses must contain the starter word - try again.\n");
-            } else {
-                for(int i = 0; guessedWord[i] == "0"; i++) {
-                    if (strcmp(guess,guessedWord[i]) == 0) {
-                        printf("You already guessed that word - try again.\n");
-                    } else {
-                            for(int j = 0; wordLib[j] == "0"; j++) {
-                                if (strcmp(guess,wordLib[i]) == 0) {
-                                printf("Guess not found in dictionary - try again.\n");
-                                } else {
-                                    guessedWord[i] = guess;
-                                    i++;
-                                    wordLib[j] = "0"; // remove the word from the wordLib
-                                }
-                            }
-                    }
-                }
+                continue;
+        } 
+
+        // existed word check
+        for(int i = 0; strcmp(guessedWord[i],"0"); i++) {
+            if (strcmp(guess,guessedWord[i]) == 0) {
+                printf("You already guessed that word - try again.\n");
+                continue;
+            }   
+        }
+        // search word in library
+        for(int j = 0; strcmp(wordLib[j],"0"); j++) {
+            if (strcmp(guess,wordLib[i]) != 0) {
+                guessedWord[i] = guess;
+                i++;
+                wordLib[j] = "0"; // remove the word from the wordLib
+                continue;
             }
         }
-        free(guess);
+
+        printf("Guess not found in dictionary - try again.\n");
+        
     }
 
     fclose(fp);
