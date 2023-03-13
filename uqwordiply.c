@@ -4,36 +4,72 @@
 //#include <csse2310a1.h>
 #include "support.h"
 
-#define MAX_WORD_LENGTH 50
-#define MAX_WORDS 5
-
 int main(int argc, char** argv) {
+    char* dictionary = DICTIONARY_FILE;
+    char* starterWord = NULL;
+    int maxWords = 0;
+    for(++argv, --argc; argc > 0 ; argc --, argv++) {
+        printf("argc = %d, argv = %s\n",argc, *argv);
+        if(strcmp(*argv, "--start") == 0) {
+            if(maxWords != 0) {
+                errorExitOne();
+            }
+            starterWord = *(++argv);
+            --argc;
+            printf ("startword is: %s\n", starterWord);
+            if (strlen(starterWord) != 3) {
+                fprintf(stderr, "uqwordiply: invalid starter word\n");
+                exit(2);
+            }
+        } else if (strcmp(*argv, "--dictionary") == 0) {
+            dictionary = *(++argv);
+            --argc;
+        } else if (strcmp(*argv , "--len") == 0) {
+            if (starterWord != NULL) {
+                errorExitOne();
+            }
+            maxWords = (*(++argv)) - '0';
+            --argc;
+            if (maxWords != 3 && maxWords != 4) {
+                errorExitOne();
+            }
+        } else {
+            errorExitOne();
+        }
+    }
 
     // test basic input first
-    char starterWord[MAX_WORD_LENGTH] = "TOP";
-    // open dictionary file, fix path later
-    char* dictionary = "./dictionary.txt"; 
-    char** guessedWord = (char**)malloc(sizeof(char*)*MAX_WORDS);
+    // open dictionary file, fix path later 
+    char** guessedWord = (char**)malloc(sizeof(char*)* MAX_WORDS);
     for (int i = 0 ; i < MAX_WORDS; i++) {
-        guessedWord[i] = (char*)malloc(sizeof(char)*MAX_WORD_LENGTH);
+        guessedWord[i] = (char*)malloc(sizeof(char) * MAX_WORD_LENGTH);
         //why can't I use guessedWord[i] = "0"; here? it lead to free memory error!
         //guessedWord[i] = "0";
     }
     FILE* fp = fopen(dictionary, "r");
-
+    
     if(fp == NULL) {
         printf("uqwordply: dictionary file \"%s\" cannot be opened\n", dictionary);
         exit(3);
         return 0;
     }
-
+    
     char** wordLib = filetokenize(fp);
 
     if (wordLib == NULL) {
         printf("This file can't be tokenized!");
         return 0;
     }
-
+    
+    if (starterWord == NULL) {
+        int i = 0;
+        while (1) {
+            int random = rand() % 7;
+            starterWord = wordLib[random];
+            break;
+        }
+        // get_wordiply_starter_word();
+    }
     printf("Wellcome to UQWordiply!\nThe starter word is: %s", starterWord);
     printf("Enter words containing this word.\n");
     for (int i = 0; i < MAX_WORDS;) {
@@ -83,7 +119,7 @@ int main(int argc, char** argv) {
         printf("Guess not found in dictionary - try again.\n");
         
     }
-
+    
     fclose(fp);
     for (int i =0; i < MAX_WORDS; i++) {
         free(guessedWord[i]);
