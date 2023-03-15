@@ -35,20 +35,36 @@ char* read_line(FILE* stream) {
     return buffer;
 }
 
+char* toLower(char* word) {
+    for (int i = 0; i < strlen(word); i++) {
+        word[i] = tolower(word[i]);
+    }
+    return word;
+}
+
+char* toUpper(char* word) {
+    for (int i = 0; i < strlen(word); i++) {
+        word[i] = toupper(word[i]);
+    }
+    return word;
+}
+
 char** filetokenize(FILE* fp) {
     char** wordLib = (char**)malloc(sizeof(char*)*5);
     int wordLibSize = 5;
     char* line = NULL;
     int i = 0;
     for(line = read_line(fp); line ; line = read_line(fp), i++) {
-        if (i == (wordLibSize - 1)) {
+        if (i == (wordLibSize - 2)) {
             wordLibSize *= 2;
-            wordLib = realloc(wordLib, sizeof(char*) * wordLibSize);
+            wordLib = (char**)realloc(wordLib, sizeof(char*) * wordLibSize);
         }
+        line = toUpper(line);
         wordLib[i] = line;
         //printf("%s\n", wordLib[i]);
     }
-    //free(line);
+    free(line);
+    wordLib[i +1] = NULL;
     return wordLib;
 }
 
@@ -58,4 +74,21 @@ void errorExitOne() {
     exit(1);
 }
 
+bool isLibWord(char* word, char** wordLib) {
+    for (int i = 0; wordLib[i] != NULL; i++) {
+        if (strcmp(word, wordLib[i]) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool isAlpha(char* word) {
+    for (int i = 0; i < strlen(word); i++) {
+        if (!isalpha(word[i])) {
+            return false;
+        }
+    }
+    return true;
+}
 #endif /* support_h */
