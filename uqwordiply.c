@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
-#include <csse2310a1.h>
+//#include <csse2310a1.h>
 //#include "support.h"
 
 #define MAX_WORD_LENGTH 52
@@ -22,6 +22,31 @@ typedef struct {
     char* starterWord;
     int maxWords;
 }TerPara;
+
+/**
+ * @brief find substring as strstr
+ * 
+ * @param str string to find in
+ * @param substr string patten
+ * @return int 1 if string find, -1 otherwise
+ */
+int find_substring(char *str, char *substr) {
+    int i = 0, j = 0;
+    for (;(*(str + j) != '\0') && (*(substr + i) != '\0');) {
+        if (*(substr + i) != *(str + j)) {
+            j++;
+            i = 0;
+        } else {
+            i++;
+            j++;
+        }
+    }
+    if (*(substr + i) == '\0'){
+        return 1;
+    } else {
+        return -1;
+    }      
+}
 
 /**
  * @brief Check whether the word containing all letters
@@ -132,7 +157,7 @@ void add(Lib* wordLib, char* line) {
  * @param starterWord inital word
  * @return Lib dictionary struct contain separated word
  */
-Lib file_tokenize(FILE* fp, char* starterWord) {
+Lib file_tokenize(FILE* fp, TerPara parameters) {
     Lib wordLib;
     wordLib.wordList = NULL;
     wordLib.wordLibSize = 0;
@@ -143,8 +168,8 @@ Lib file_tokenize(FILE* fp, char* starterWord) {
         int lengthLine = strlen(line);
         // replace newline with NULL terminator
         line[lengthLine - 1] = '\0';
-        
-        if (!is_alpha(line)) {
+        parameters.starterWord [strlen(parameters.starterWord) -1] = '\0';
+        if (!is_alpha(line) || find_substring(to_upper(line), to_upper(parameters.starterWord)) == -1) {
             continue;
         }
         add(&wordLib, line);
@@ -237,6 +262,65 @@ TerPara commandline_processing(int argc, char** argv) {
 }
 
 /**
+ * @brief Function to operating I/O and control the game flow
+ * 
+ * @param parameters include dictionary, starter word
+ * and max word
+ * @param wordLib containing list of words and its size
+ * @return char** the guessed words
+ */
+char** game_runner(TerPara parameters, Lib wordLib) {
+    char** guessedWord = (char**)malloc(sizeof(char*) * MAX_WORDS);
+    for (int i = 0; i < MAX_WORDS; i++) {
+        guessedWord[i] = (char*)malloc(sizeof(char) * MAX_WORD_LENGTH);
+        guessedWord[i] = "0";
+    }
+    printf("Welcome to UQWordiply!\n");
+    printf("The starter word is: %s\n", to_upper(parameters.starterWord));
+    printf("Enter words containing this word.\n");
+    for (int idx = 1; idx < MAX_WORDS + 1;) {
+        char* guess = (char*)malloc(sizeof(char) * MAX_WORD_LENGTH);
+        //recieve input from user
+        printf("Enter guess %d:\n", idx);
+        guess = read_line(stdin);
+
+        if (strcasecmp(guess, parameters.starterWord) == 0) {
+            printf("Guesses can't be the starter word - try again.\n");
+            continue;
+        } 
+        // invalid char check
+        if (!is_alpha(guess)) {
+            printf("Guesses must contain only letters - try again.\n");
+            continue;
+        } 
+
+        // starter word check
+        if (strstr(to_upper(guess), to_upper(parameters.starterWord)) 
+                == NULL) {
+            printf("Guesses must contain the starter word - try again.\n");
+            continue;
+        } 
+        // existed word check
+        for (int i = 0; strcmp(guessedWord[i], "0"); i++) {
+            if (strcmp(to_upper(guess), to_upper(guessedWord[i])) == 0) {
+                printf("You’ve already guessed that word - try again.\n");
+                continue;
+            }   
+        }
+        // search word in library
+        if (is_lib_word(guess, wordLib.wordList)) {
+            guessedWord[idx] = guess;
+            idx++;
+            continue;
+        } else {
+            printf("Guess not found in dictionary - try again.\n");
+            continue;
+        }
+    }
+    return guessedWord;
+}
+
+/**
  * @brief Printing final result including total length of words,
  * longest words found in previous guesses and dictionary
  * 
@@ -268,77 +352,12 @@ void finalizing_result(Lib dictionary, char** guessedWord) {
 }
 
 /**
- * @brief Function to operating I/O and control the game flow
+ * @brief main function that initialize and call all functions
  * 
- * @param parameters include dictionary, starter word
- * and max word
- * @param wordLib containing list of words and its size
- * @return char** the guessed words
+ * @param argc argument count
+ * @param argv argument vector
+ * @return int 0 if function works normally
  */
-char** game_runner(TerPara parameters, Lib wordLib) {
-    char** guessedWord = (char**)malloc(sizeof(char*) * MAX_WORDS);
-    for (int i = 0; i < MAX_WORDS; i++) {
-        guessedWord[i] = (char*)malloc(sizeof(char) * MAX_WORD_LENGTH);
-        guessedWord[i] = "0";
-    }
-
-    printf("Welcome to UQWordiply!\n");
-    printf("The starter word is: %s\n", to_upper(parameters.starterWord));
-    printf("Enter words containing this word.\n");
-    for (int idx = 1; idx < MAX_WORDS + 1;) {
-        char* guess = (char*)malloc(sizeof(char) * MAX_WORD_LENGTH);
-        //recieve input from user
-        printf("Enter guess %d:\n", idx);
-        guess = read_line(stdin);
-
-        //printf("the input is: %s\n", guess); //----------------------
-        
-        if (strcasecmp(guess, parameters.starterWord) == 0) {
-            printf("Guesses can't be the starter word - try again.\n");
-            continue;
-        } 
-        // invalid char check
-        // (guess[j] >= 65 && guess[j] <= 90) 
-        //|| (guess[j] >= 97 && guess[j] <= 122)
-        if (!is_alpha(guess)) {
-            // These number above are ASCII code for A-Z and a-z
-            printf("Guesses must contain only letters - try again.\n");
-            continue;
-        } 
-
-        // starter word check
-        //printf("Starter word check!\n");//----------------------
-
-        if (strstr(to_upper(guess), to_upper(parameters.starterWord)) 
-                == NULL) {
-            printf("Guesses must contain the starter word - try again.\n");
-            continue;
-        } 
-        // existed word check
-        //printf("Existed word check!\n");//----------------------
-        for (int i = 0; strcmp(guessedWord[i], "0"); i++) {
-            if (strcmp(to_upper(guess), to_upper(guessedWord[i])) == 0) {
-                printf("You’ve already guessed that word - try again.\n");
-                continue;
-            }   
-        }
-        // search word in library
-        //printf("Lib search!\n");//----------------------
-        if (is_lib_word(guess, wordLib.wordList)) {
-            guessedWord[idx] = guess;
-            idx++;
-            continue;
-        } else {
-            printf("Guess not found in dictionary - try again.\n");
-            continue;
-        }
-    }
-    return guessedWord;
-}
-
-/**
- * Main function
-*/
 int main(int argc, char** argv) {
     TerPara parameters;
     parameters = commandline_processing(argc, argv);
@@ -355,7 +374,7 @@ int main(int argc, char** argv) {
     free(parameters.dictionary);
     //printf("Dictionary read!\n");
 
-    Lib wordLib = file_tokenize(fp, parameters.starterWord);
+    Lib wordLib = file_tokenize(fp, parameters);
 
     //printf("word tokenized!\n");
     if (wordLib.wordList == NULL) {
