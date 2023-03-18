@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
-//#include <csse2310a1.h>
+#include <csse2310a1.h>
 //#include "support.h"
 
 #define MAX_WORD_LENGTH 52
@@ -277,11 +277,16 @@ Lib game_runner(TerPara parameters, Lib wordLib, Lib guessedWord) {
             continue;
         } 
         // existed word check
+        int flag = 0;
         for (int i = 0; i < guessedWord.wordLibSize; i++) {
             if (strcmp(to_upper(guess), to_upper(guessedWord.wordList[i])) == 0) {
-                printf("Youā€™ve already guessed that word - try again.\n");
-                continue;
+                printf("You've already guessed that word - try again.\n");
+                flag = 1;
+                break;
             }   
+        }
+        if (flag == 1) {
+            continue;
         }
         // search word in library
         if (is_lib_word(guess, wordLib)) {
