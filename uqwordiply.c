@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
-#include <csse2310a1.h>
+//#include <csse2310a1.h>
 //#include "support.h"
 
 #define MAX_WORD_LENGTH 52
@@ -59,6 +59,9 @@ char* read_line(FILE* stream, Lib guessedWord) {
         next = fgetc(stream);
         if (next == EOF && numRead == 0) {
             free(buffer);
+            if (guessedWord.wordLibSize > 0) {
+                return NULL;
+            }
             exit(4);
             return NULL;
         }
@@ -255,6 +258,9 @@ Lib game_runner(TerPara parameters, Lib wordLib, Lib guessedWord) {
         printf("Enter guess %d:\n", idx);
         guess = read_line(stdin, guessedWord);
         //printf("guess %d is: %s\n", idx, guess);
+        if(guess == NULL) {
+            return guessedWord;
+        }
         if (strcasecmp(guess, parameters.starterWord) == 0) {
             printf("Guesses can't be the starter word - try again.\n");
             continue;
