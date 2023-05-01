@@ -1,0 +1,2 @@
+Usage: uqwordiply [--start starter-word | --len length] [--dictionary filename]
+All heap blocks were freed
